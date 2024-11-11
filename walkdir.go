@@ -11,15 +11,11 @@ import (
 	"github.com/vitali-fedulov/images4"
 )
 
-const maxThreads = 100
-
-const perDirectory = 10
-
-var limit = newPool(maxThreads / perDirectory)
+var limit pool
 
 type pool struct {
 	add, reset, wait chan any
-	size             int
+	size             uint
 }
 
 func (p pool) get() {
@@ -34,7 +30,7 @@ func (p pool) finish() {
 	<-p.wait
 }
 
-func newPool(size int) pool {
+func newPool(size uint) pool {
 	p := pool{make(chan any), make(chan any, size), make(chan any), size}
 
 	go func(p pool) {
@@ -52,6 +48,12 @@ func newPool(size int) pool {
 			}
 
 			if available == size {
+				select {
+				case p.add <- nil:
+					continue
+				default:
+				}
+
 				break
 			}
 		}
@@ -63,13 +65,21 @@ func newPool(size int) pool {
 }
 
 func walker(path string) {
-	limit.get()
-	go walkDir(path)
-	limit.finish()
+	if dirThreaded {
+		limit = newPool(*dirThreads)
+		limit.get()
+		go processDir(path)
+		limit.finish()
+
+	} else {
+		processDir(path)
+	}
 }
 
-func walkDir(path string) {
-	defer limit.remove()
+func processDir(path string) {
+	if dirThreaded {
+		defer limit.remove()
+	}
 
 	ds, err := os.ReadDir(path)
 	if err != nil {
@@ -81,38 +91,52 @@ func walkDir(path string) {
 		}(), err.Error())
 	}
 
-	entries := len(ds)
-	threads := make(chan any, perDirectory-1)
-	completed := make(chan any, entries)
-	for i := 0; i < perDirectory-1; i++ {
-		threads <- nil
-	}
+	if fileThreaded {
+		entries := len(ds)
+		threads := make(chan any, *dirEntryThreads)
+		completed := make(chan any, entries)
+		for i := 0; i < int(*dirEntryThreads); i++ {
+			threads <- nil
+		}
 
-	for _, d := range ds {
-		<-threads
-		go func() {
-			if err = walkfunc(filepath.Join(path, d.Name()), d); err != nil {
+		for _, d := range ds {
+			<-threads
+			go func() {
+				if err = processDirEntry(filepath.Join(path, d.Name()), d); err != nil {
+					log.Fatal(err)
+				}
+
+				completed <- nil
+				threads <- nil
+			}()
+		}
+
+		for i := 1; i < entries; i++ {
+			<-completed
+		}
+
+	} else {
+		for _, d := range ds {
+			if err = processDirEntry(filepath.Join(path, d.Name()), d); err != nil {
 				log.Fatal(err)
 			}
-
-			completed <- nil
-			threads <- nil
-		}()
-	}
-
-	for i := 1; i < entries; i++ {
-		<-completed
+		}
 	}
 }
 
 var imageExtensions = []string{".png", ".jpg", ".jpeg", ".gif"}
 
-func walkfunc(path string, d fs.DirEntry) error {
-	totalReads.Add(1)
+func processDirEntry(path string, d fs.DirEntry) error {
+	defer totalReads.Add(1)
 
 	if d.IsDir() {
-		limit.get()
-		go walkDir(path)
+		if dirThreaded {
+			limit.get()
+			go processDir(path)
+
+		} else if *walk {
+			processDir(path)
+		}
 
 		return nil
 	}
@@ -122,14 +146,14 @@ func walkfunc(path string, d fs.DirEntry) error {
 		return nil
 	}
 
+	defer imagesRead.Add(1)
+
 	img, err := images4.Open(path)
 	if err != nil {
 		logToFile.Printf("failed to read image at %s", path)
 
 		return nil
 	}
-
-	imagesRead.Add(1)
 
 	if match(images4.Icon(img)) {
 		logToFile.Printf("found matching file at %s", path)

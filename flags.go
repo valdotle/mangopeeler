@@ -8,15 +8,19 @@ import (
 	"path/filepath"
 	"slices"
 	"strings"
+	"time"
 )
 
 var (
-	path, logPath string
-	walk          = flag.Bool("walk", true, "whether to walk subdirectories (if applicable)")
-	deleteMatches = flag.Bool("delete", true, "whether to delete located duplicates")
-	createLogs    = flag.Bool("log", true, "whether to log actions performed by the script")
-	sitelist      = siteEnum()
-	sites         = sitelist
+	path, logPath             string
+	walk                      = flag.Bool("walk", true, "whether to walk subdirectories (if applicable)")
+	deleteMatches             = flag.Bool("delete", true, "whether to delete located duplicates")
+	createLogs                = flag.Bool("log", true, "whether to create logfiles for actions performed by the script")
+	dirThreads                = flag.Uint("directory-threads", 20, "how many directories to process simultaneously (if applicable)")
+	dirEntryThreads           = flag.Uint("directory-entry-threads", 5, "how many directory entries to process simultaneously")
+	sitelist                  = siteEnum()
+	sites                     = sitelist
+	dirThreaded, fileThreaded bool
 )
 
 type stringArrayFlag []string
@@ -53,6 +57,16 @@ func siteEnum() stringArrayFlag {
 	return sites
 }
 
+var flagAliases = map[string]string{
+	"delete":                  "d",
+	"directory-entry-threads": "det",
+	"directory-threads":       "dt",
+	"log-at":                  "lat",
+	"log":                     "l",
+	"site":                    "s",
+	"walk":                    "w",
+}
+
 func setupFlags() {
 	flag.Var(&sites, "site", "which site(s)'s images to check for")
 
@@ -61,7 +75,16 @@ func setupFlags() {
 		log.Panicf("failed to find workdir, error:\n%s", err.Error())
 	}
 
-	flag.StringVar(&path, "path", dir, "the directory to execute this script in")
-	flag.StringVar(&logPath, "log-path", filepath.Join(dir, "mango-peels.log"), "where to store logfiles (if applicable)")
+	logfileName := strings.ReplaceAll(time.Now().Local().Format(time.DateTime)+".log", ":", "-")
+	flag.StringVar(&path, "dir", dir, "the directory to execute this script in")
+	flag.StringVar(&logPath, "log-at", filepath.Join(dir, "mango peels", logfileName), "where to store logfiles (if applicable)")
+
+	for from, to := range flagAliases {
+		flagSet := flag.Lookup(from)
+		flag.Var(flagSet.Value, to, "shorthand for "+flagSet.Name)
+	}
 	flag.Parse()
+
+	dirThreaded = *dirThreads > 1 && *walk
+	fileThreaded = *dirEntryThreads > 1
 }

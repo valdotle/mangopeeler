@@ -5,6 +5,7 @@ import (
 	"io"
 	"log"
 	"os"
+	"path/filepath"
 	"sync/atomic"
 	"time"
 )
@@ -16,6 +17,10 @@ var (
 
 func setupLogs() {
 	if *createLogs {
+		if err := os.MkdirAll(filepath.Dir(logPath), os.ModePerm); err != nil {
+			log.Panicf("failed to open logfile directory, error:\n%s", err.Error())
+		}
+
 		file, err := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_RDWR, os.ModePerm)
 		if err != nil {
 			log.Panicf("failed to open logfile, error:\n%s", err.Error())
@@ -28,6 +33,12 @@ func setupLogs() {
 
 	log.SetPrefix("\r")
 	log.SetFlags(log.Ltime)
+}
+
+func closeLogs() {
+	if logfile != nil {
+		logfile.Close()
+	}
 }
 
 var (
