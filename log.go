@@ -9,22 +9,25 @@ import (
 	"time"
 )
 
-func setupLogs() {
-	log.SetFlags(0)
-	log.SetPrefix("\r")
+var (
+	logToFile = log.New(io.Discard, "", 0)
+	logfile   *os.File
+)
 
-	if *logPath != "" && *createLogs {
-		logfile, err := os.OpenFile(*logPath, os.O_CREATE|os.O_APPEND|os.O_RDWR, os.ModePerm)
+func setupLogs() {
+	if *createLogs {
+		file, err := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_RDWR, os.ModePerm)
 		if err != nil {
 			log.Panicf("failed to open logfile, error:\n%s", err.Error())
 		}
 
-		defer logfile.Close()
+		logfile = file
 
-		log.SetOutput(logfile)
-	} else if !*createLogs {
-		log.SetOutput(io.Discard)
+		logToFile = log.New(logfile, "", 0)
 	}
+
+	log.SetPrefix("\r")
+	log.SetFlags(log.Ltime)
 }
 
 var (

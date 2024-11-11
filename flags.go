@@ -11,13 +11,12 @@ import (
 )
 
 var (
-	path       string
-	walk       = flag.Bool("walk", true, "whether to walk subdirectories (if applicable)")
-	delete     = flag.Bool("delete", true, "whether to delete located duplicates")
-	logPath    = flag.String("log-path", "", "where to store logfiles (if applicable)")
-	createLogs = flag.Bool("log", true, "whether to log actions performed by the script")
-	sitelist   = siteEnum()
-	sites      = sitelist
+	path, logPath string
+	walk          = flag.Bool("walk", true, "whether to walk subdirectories (if applicable)")
+	deleteMatches = flag.Bool("delete", true, "whether to delete located duplicates")
+	createLogs    = flag.Bool("log", true, "whether to log actions performed by the script")
+	sitelist      = siteEnum()
+	sites         = sitelist
 )
 
 type stringArrayFlag []string
@@ -30,7 +29,7 @@ func (i *stringArrayFlag) String() string {
 // Set is an implementation of the flag.Value interface
 func (i *stringArrayFlag) Set(value string) error {
 	if !slices.Contains(sitelist, value) {
-		return fmt.Errorf("%s is not a valid site value, must be one of %v", value, sitelist)
+		return fmt.Errorf("%s is not a valid site value, must be one of %s", value, sitelist.String())
 	}
 	*i = append(*i, value)
 	return nil
@@ -62,5 +61,7 @@ func setupFlags() {
 		log.Panicf("failed to find workdir, error:\n%s", err.Error())
 	}
 
-	flag.StringVar(&path, "path", filepath.Clean(dir), "the directory to execute this script in")
+	flag.StringVar(&path, "path", dir, "the directory to execute this script in")
+	flag.StringVar(&logPath, "log-path", filepath.Join(dir, "mango-peels.log"), "where to store logfiles (if applicable)")
+	flag.Parse()
 }
