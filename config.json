@@ -1,0 +1,10 @@
+{
+    "delete": true,
+    "dir": ".",
+    "directory-threads": 10,
+    "directory-entry-threads": 10,
+    "log": true,
+    "log-at": "./mango peels",
+    "site": ["blogtruyen"],
+    "walk": true
+}

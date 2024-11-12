@@ -22,7 +22,7 @@ Once downloaded you can simply move the skript into a directory you want it to c
 
 If you want more control over the skript, it supports a variety of command flags, all of which can be viewed setting the `-h`/`-help` flag.
 
--   ### `-d`/`-delete`
+-   ### `-del`/`-delete`
     Whether you want to delete duplicate files (default `true`)
 -   ### `-dt`/`-directory-entry-threads`
     How many directory entries to process simultaneously (default 10), only applicable if walking subdirectories is enabled
@@ -41,4 +41,4 @@ If you want more control over the skript, it supports a variety of command flags
 
 ## config file
 
-All options can be set using a config file instead as well. Command flags will take precedence over the config file, meaning you can use the config file to store your baseline settings and set command flags to overrule them on the fly as needed. A sample config file, mirroring the [command flag](#command-flags) defaults can be found [here](https://github.com/valdotle/mangopeeler/tree/main/config.json).
+All options can be set using a config file instead as well. The `config.json` file must be located in the same directory as the skript to take effect. Command flags will take precedence over the config file, meaning you can use it to store your baseline settings and set command flags to overrule them on the fly as needed. A sample `config.json` file, set to the [command flag](#command-flags) defaults comes with all binaries and can be found [here](https://github.com/valdotle/mangopeeler/tree/main/config.json).

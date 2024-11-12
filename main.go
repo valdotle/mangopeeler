@@ -18,7 +18,7 @@ func main() {
 
 	go progress()
 
-	walker(path)
+	walker(options.Dir)
 
 	log.Printf("\nscanned %d entries (including %d images) in %s", totalReads.Load(), imagesRead.Load(), time.Since(start).String())
 }

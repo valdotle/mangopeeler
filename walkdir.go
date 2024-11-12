@@ -14,67 +14,76 @@ import (
 var limit pool
 
 type pool struct {
-	add, reset, wait chan any
-	size             uint
+	addJob          chan string
+	removeJob, wait chan any
+	jobs            []string
+	size            uint
 }
 
-func (p pool) get() {
-	<-p.add
+func (p pool) add(path string) {
+	p.addJob <- path
 }
 
 func (p pool) remove() {
-	p.reset <- nil
+	p.removeJob <- nil
 }
 
 func (p pool) finish() {
 	<-p.wait
 }
 
-func newPool(size uint) pool {
-	p := pool{make(chan any), make(chan any, size), make(chan any), size}
+func newPool() pool {
+	p := pool{make(chan string, options.DirEntryThreads*options.DirThreads), make(chan any, options.DirThreads), make(chan any), nil, options.DirThreads}
 
-	go func(p pool) {
-		for available := p.size; ; {
-			if available > 0 {
-				select {
-				case <-p.reset:
-					available++
-				case p.add <- nil:
-					available--
-				}
-			} else {
-				<-p.reset
-				available++
-			}
-
-			if available == size {
-				select {
-				case p.add <- nil:
-					continue
-				default:
-				}
-
-				break
-			}
-		}
-
-		p.wait <- nil
-	}(p)
+	go p.run()
 
 	return p
 }
 
+func (p pool) run() {
+	for available := p.size; ; {
+		select {
+		case <-p.removeJob:
+			available++
+		case path := <-p.addJob:
+			p.jobs = append(p.jobs, path)
+		}
+
+		if available > 0 && len(p.jobs) > 0 {
+			go processDir(p.jobs[0])
+			p.jobs = p.jobs[1:]
+			available--
+			continue
+		}
+
+		// make sure there are no pending jobs before closing, since the order of select isn't deterministic
+		if available == p.size {
+			select {
+			case path := <-p.addJob:
+				p.jobs = append(p.jobs, path)
+				continue
+			default:
+			}
+
+			break
+		}
+	}
+
+	p.wait <- nil
+}
+
 func walker(path string) {
 	if dirThreaded {
-		limit = newPool(*dirThreads)
-		limit.get()
-		go processDir(path)
+		limit = newPool()
+		limit.add(path)
 		limit.finish()
 
 	} else {
 		processDir(path)
 	}
 }
+
+const threadingThreshold = 4
 
 func processDir(path string) {
 	if dirThreaded {
@@ -84,18 +93,18 @@ func processDir(path string) {
 	ds, err := os.ReadDir(path)
 	if err != nil {
 		log.Fatalf("error occured walking specified director%s, error:\n%s", func() string {
-			if *walk {
+			if options.Walk {
 				return "ies"
 			}
 			return "y"
 		}(), err.Error())
 	}
 
-	if fileThreaded {
+	if fileThreaded && len(ds) > threadingThreshold {
 		entries := len(ds)
-		threads := make(chan any, *dirEntryThreads)
+		threads := make(chan any, options.DirEntryThreads)
 		completed := make(chan any, entries)
-		for i := 0; i < int(*dirEntryThreads); i++ {
+		for i := 0; i < int(options.DirEntryThreads); i++ {
 			threads <- nil
 		}
 
@@ -131,10 +140,9 @@ func processDirEntry(path string, d fs.DirEntry) error {
 
 	if d.IsDir() {
 		if dirThreaded {
-			limit.get()
-			go processDir(path)
+			limit.add(path)
 
-		} else if *walk {
+		} else if options.Walk {
 			processDir(path)
 		}
 
@@ -157,7 +165,7 @@ func processDirEntry(path string, d fs.DirEntry) error {
 
 	if match(images4.Icon(img)) {
 		logToFile.Printf("found matching file at %s", path)
-		if *deleteMatches {
+		if options.Delete {
 			if err = os.Remove(path); err != nil {
 				return err
 			}

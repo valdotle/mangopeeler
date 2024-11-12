@@ -38,7 +38,7 @@ func initializer(path string, d fs.DirEntry, err error) error {
 
 	submatch := func(m string) bool { return strings.Contains(path, m) }
 
-	if !slices.ContainsFunc(sites, submatch) {
+	if !slices.ContainsFunc(options.Sites, submatch) {
 		return nil
 	}
 

@@ -1,25 +1,20 @@
 package main
 
 import (
+	_ "embed"
+	"encoding/json"
+	"errors"
 	"flag"
 	"fmt"
 	"log"
 	"os"
-	"path/filepath"
 	"slices"
 	"strings"
-	"time"
 )
 
 var (
-	path, logPath             string
-	walk                      = flag.Bool("walk", true, "whether to walk subdirectories (if applicable)")
-	deleteMatches             = flag.Bool("delete", true, "whether to delete located duplicates")
-	createLogs                = flag.Bool("log", true, "whether to create logfiles for actions performed by the script")
-	dirThreads                = flag.Uint("directory-threads", 20, "how many directories to process simultaneously (if applicable)")
-	dirEntryThreads           = flag.Uint("directory-entry-threads", 5, "how many directory entries to process simultaneously")
+	options                   config
 	sitelist                  = siteEnum()
-	sites                     = sitelist
 	dirThreaded, fileThreaded bool
 )
 
@@ -58,7 +53,7 @@ func siteEnum() stringArrayFlag {
 }
 
 var flagAliases = map[string]string{
-	"delete":                  "d",
+	"delete":                  "del",
 	"directory-entry-threads": "det",
 	"directory-threads":       "dt",
 	"log-at":                  "lat",
@@ -67,24 +62,54 @@ var flagAliases = map[string]string{
 	"walk":                    "w",
 }
 
-func setupFlags() {
-	flag.Var(&sites, "site", "which site(s)'s images to check for")
+type config struct {
+	Delete          bool            `json:"delete"`
+	Dir             string          `json:"dir"`
+	DirThreads      uint            `json:"directory-threads"`
+	DirEntryThreads uint            `json:"directory-entry-threads"`
+	Log             bool            `json:"log"`
+	LogAt           string          `json:"log-at"`
+	Sites           stringArrayFlag `json:"site"`
+	Walk            bool            `json:"walk"`
+}
 
-	dir, err := os.Getwd()
-	if err != nil {
-		log.Panicf("failed to find workdir, error:\n%s", err.Error())
+//go:embed config.json
+var data []byte
+
+const configFileName = "./config.json"
+
+func setupFlags() {
+	// read config file
+	fileData, err := os.ReadFile(configFileName)
+	if err != nil && !errors.Is(err, os.ErrNotExist) {
+		log.Panicf("failed to open config, error:\n%s", err.Error())
+	} else if err == nil {
+		data = fileData
 	}
 
-	logfileName := strings.ReplaceAll(time.Now().Local().Format(time.DateTime)+".log", ":", "-")
-	flag.StringVar(&path, "dir", dir, "the directory to execute this script in")
-	flag.StringVar(&logPath, "log-at", filepath.Join(dir, "mango peels", logfileName), "where to store logfiles (if applicable)")
+	// parse config
+	if err := json.Unmarshal(data, &options); err != nil {
+		log.Panicf("failed to read config, error\n:%s", err.Error())
+	}
 
+	// set flags
+	flag.BoolVar(&options.Delete, "delete", options.Delete, "whether to delete located duplicates")
+	flag.StringVar(&options.Dir, "dir", options.Dir, "the directory to execute this script in")
+	flag.UintVar(&options.DirThreads, "directory-threads", options.DirThreads, "how many directories to process simultaneously (if applicable)")
+	flag.UintVar(&options.DirEntryThreads, "directory-entry-threads", options.DirEntryThreads, "how many directory entries to process simultaneously")
+	flag.BoolVar(&options.Log, "log", options.Log, "whether to create logfiles for actions performed by the script")
+	flag.StringVar(&options.LogAt, "log-at", options.LogAt, "where to store logfiles (if applicable)")
+	flag.Var(&options.Sites, "site", "which site(s)'s images to check for")
+	flag.BoolVar(&options.Walk, "walk", options.Walk, "whether to walk subdirectories (if applicable)")
+
+	// set flag aliases
 	for from, to := range flagAliases {
 		flagSet := flag.Lookup(from)
 		flag.Var(flagSet.Value, to, "shorthand for "+flagSet.Name)
 	}
+
 	flag.Parse()
 
-	dirThreaded = *dirThreads > 1 && *walk
-	fileThreaded = *dirEntryThreads > 1
+	dirThreaded = options.DirThreads > 1 && options.Walk
+	fileThreaded = options.DirEntryThreads > 1
 }

@@ -6,6 +6,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 	"sync/atomic"
 	"time"
 )
@@ -16,14 +17,15 @@ var (
 )
 
 func setupLogs() {
-	if *createLogs {
-		if err := os.MkdirAll(filepath.Dir(logPath), os.ModePerm); err != nil {
-			log.Panicf("failed to open logfile directory, error:\n%s", err.Error())
+	if options.Log {
+		if err := os.MkdirAll(filepath.Dir(options.LogAt), os.ModePerm); err != nil {
+			log.Panicf("failed to open logfile directory, error\n:%s", err.Error())
 		}
 
-		file, err := os.OpenFile(logPath, os.O_CREATE|os.O_APPEND|os.O_RDWR, os.ModePerm)
+		logfileName := strings.ReplaceAll(time.Now().Local().Format(time.DateTime)+".log", ":", "-")
+		file, err := os.OpenFile(filepath.Join(options.LogAt, logfileName), os.O_CREATE|os.O_APPEND|os.O_RDWR, os.ModePerm)
 		if err != nil {
-			log.Panicf("failed to open logfile, error:\n%s", err.Error())
+			log.Panicf("failed to open logfile, error\n:%s", err.Error())
 		}
 
 		logfile = file
