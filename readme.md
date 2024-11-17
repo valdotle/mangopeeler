@@ -54,6 +54,8 @@ If you want more control over the script, it supports a variety of command flags
     The directory to execute this script in (defaults to the current directory)
 -   #### `-det`/`-directory-entry-threads`
     How many directory entries/files to process simultaneously (default `5`). Set to `1`/`0` to disable.
+-   #### `-dup`/`-duplicates`
+    Whether to check for duplicate images within a directory.
 -   #### `-l`/`-log`
     Whether to create a logfile for actions performed by the script (default `true`)
 -   #### `-lat`/`-log-at`
@@ -74,15 +76,13 @@ While the configuration allows for quite some tweaking performance wise, the cur
 Here are some theoretical performance considerations when it comes to `directory-entry-threads`, `directory-threads`, `site` and `walk` though:
 
 <details>
-  <summary><h3> `site` and `walk`</h3></summary>
+  <summary><h3><code>site</code> and <code>walk</code></h3></summary>
   If processing subdirectories is enabled with `walk` (the default), the script will not only scan the current/specified directory, but all its subdirectories as well. That means more directory entries to look through and thus naturely more compute. Make sure to set `walk` to `false` if you only mean to scan a specific directory's contents to avoid wasting resources.
 
 Similarly, `site` allows to limit which aggregator site's images to look for. By default, the script will search all aggregator images. But if you are going to scan a bunch of Vietnamese manga, a Portugese aggregator's images are rather unlikely to appear - and vice versa. By specifying which aggregator's images to look for, you can reduce the time it takes to match an image against the aggregator images.
 
-</details>
-
-<details>
-  <summary><h3> `directory-threads` and `directory-entry-threads`</h3></summary>
+</details><details>
+  <summary><h3><code>directory-threads</code> and <code>directory-entry-threads</code></h3></summary>
   Directory entry threads is the number of threads allocated per directory. That is, if the folder for a chapter contains X files, each directory entry thread can process one of them simultaneously. Increasing the number of directory entry threads might be useful when processing directories with many entries (think long chapters). On the other hand, titles with short chapters (=few entries per directory) might be unable to utilize multiple threads processing directory entries. In this case, reducing directory entry threads or even disabling threading on directory level might be beneficial. Additionally, managing threads introduces a certain performance overhead which may not outweigh the performance gains earned from threading so using a very low number of directory entry thread will probably your reduce performance as well.
 
 Similarly, directory threads determine the number of directories (think chapters) that can be processed simultaneously. While increasing directory threads is mainly a means to increase resource utilization, decreasing or disabling directory entry threads is useful when processing a single/small number of directories only or to run the script in the background.
@@ -101,7 +101,7 @@ Increasing the number of directory threads while reducing the number of director
 -   Longer chapters → consider increasing the number of directory entry threads.
 -   For a given total number of threads, allocating more threads to `directory-threads` while decreasing `directory-entry-threads` should decrease memory usage.
 
-The inverse is true for all of the above.
+The opposite is true for all of the above.
 
 Very low values for either `directory-threads` or `directory-entry-threads` can hamper performance rather than improving it. Consider disabling the respective option.
 

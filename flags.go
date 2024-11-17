@@ -56,27 +56,12 @@ var flagAliases = map[string]string{
 	"delete":                  "del",
 	"directory-entry-threads": "det",
 	"directory-threads":       "dt",
+	"duplicates":              "dup",
 	"log-at":                  "lat",
 	"log":                     "l",
 	"site":                    "s",
 	"walk":                    "w",
 }
-
-type config struct {
-	Delete          bool            `json:"delete"`
-	Dir             string          `json:"dir"`
-	DirThreads      uint            `json:"directory-threads"`
-	DirEntryThreads uint            `json:"directory-entry-threads"`
-	Log             bool            `json:"log"`
-	LogAt           string          `json:"log-at"`
-	Sites           stringArrayFlag `json:"site"`
-	Walk            bool            `json:"walk"`
-}
-
-//go:embed config.json
-var data []byte
-
-const configFileName = "./config.json"
 
 func setupFlags() {
 	// read config file
@@ -97,6 +82,7 @@ func setupFlags() {
 	flag.StringVar(&options.Dir, "dir", options.Dir, "the directory to execute this script in")
 	flag.UintVar(&options.DirThreads, "directory-threads", options.DirThreads, "how many directories to process simultaneously (if applicable)")
 	flag.UintVar(&options.DirEntryThreads, "directory-entry-threads", options.DirEntryThreads, "how many directory entries to process simultaneously")
+	flag.BoolVar(&options.Duplicates, "duplicates", options.Duplicates, "whether to check for duplicate images within directories")
 	flag.BoolVar(&options.Log, "log", options.Log, "whether to create logfiles for actions performed by the script")
 	flag.StringVar(&options.LogAt, "log-at", options.LogAt, "where to store logfiles (if applicable)")
 	flag.Var(&options.Sites, "site", "which site(s)'s images to check for")
