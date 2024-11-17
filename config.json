@@ -1,11 +1,10 @@
 {
     "delete": true,
-    "dir": ".",
-    "directory-threads": 10,
-    "directory-entry-threads": 1,
+    "directory": ".",
     "duplicates": true,
     "log": true,
     "log-at": "./mango peels",
     "site": ["blogtruyen"],
+    "threads": 10,
     "walk": true
 }

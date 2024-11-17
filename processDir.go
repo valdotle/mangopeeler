@@ -6,11 +6,8 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/valdotle/mangopeeler/internal"
 	"github.com/vitali-fedulov/images4"
 )
-
-const threadingThreshold = 4
 
 func processDir(path string) {
 	if dirThreaded {
@@ -30,35 +27,21 @@ func processDir(path string) {
 	var (
 		dirProcessor func(d fs.DirEntry)
 		deferfunc    = func() {}
-		entries      = len(ds)
-		thread       = fileThreaded && threadingThreshold < entries
 	)
 
-	// synchronous without caring for duplicates
-	if !options.Duplicates && !thread {
+	// without caring for duplicates
+	if !options.Duplicates {
 		dirProcessor = func(d fs.DirEntry) { dirEntry(path, d) }
 
 	} else
-	// synchronous with duplicates check
-	if !thread {
-		var results []internal.DirEntryResponse
+	// with duplicates check
+	{
+		var results []dirEntryResponse
 		dirProcessor = func(d fs.DirEntry) {
-			results = append(results, internal.DirEntryResponse{Filename: fileName(path, d), Icon: dirEntryWithResult(path, d)})
+			results = append(results, dirEntryResponse{filename: fileName(path, d), icon: dirEntryWithResult(path, d)})
 		}
 
 		deferfunc = func() { matchDuplicates(results) }
-
-	} else
-	// threaded with duplicate check
-	if dirPool := internal.NewDirPool(int(options.DirEntryThreads), entries); options.Duplicates {
-		dirProcessor = func(d fs.DirEntry) { dirEntryThreadedWithResult(d, path, dirPool) }
-		deferfunc = func() { matchDuplicates(dirPool.WaitForResults()) }
-
-	} else
-	// threaded without duplicate check
-	{
-		dirProcessor = func(d fs.DirEntry) { dirEntryThreaded(d, path, dirPool) }
-		deferfunc = dirPool.Wait
 	}
 
 	defer deferfunc()
@@ -74,14 +57,6 @@ func dirEntry(path string, d fs.DirEntry) {
 	}
 }
 
-func dirEntryThreaded(d fs.DirEntry, path string, dirPool internal.DirPool) {
-	dirPool.Add()
-	go func() {
-		defer dirPool.Remove()
-		dirEntry(path, d)
-	}()
-}
-
 func dirEntryWithResult(path string, d fs.DirEntry) images4.IconT {
 	var result images4.IconT
 	if err := processDirEntry(fileName(path, d), d, &result); err != nil {
@@ -95,7 +70,7 @@ func fileName(path string, d fs.DirEntry) string {
 	return filepath.Join(path, d.Name())
 }
 
-func dirEntryThreadedWithResult(d fs.DirEntry, path string, dirPool internal.DirPool) {
-	dirPool.Add()
-	go dirPool.RemoveWithResult(fileName(path, d), dirEntryWithResult(path, d))
+type dirEntryResponse struct {
+	filename string
+	icon     images4.IconT
 }

@@ -12,7 +12,7 @@ I've also been thinking of various other features that I might add at a later po
 
 # usage
 
-To get started, download the script for your corresponding OS [here](https://github.com/valdotle/mangopeeler/releases). While the script _should_ be cross-platform compatible, I'm only able to test on Windows, so keep that in mind.
+To get started, download the script for your corresponding OS [here](https://github.com/valdotle/mangopeeler/releases/latest). While the script _should_ be cross-platform compatible, I'm only able to test on Windows, so keep that in mind.
 
 Currently, **unzipping** folders **isn't supported**. That means, the script will only be able to process **images** that are simply **located in a directory**. When coding, I was assuming a directory structure like so:
 
@@ -40,72 +40,43 @@ Note that currently **only `.png`, `.gif`, `.jpg` and `.jpeg` images are support
 
 # configuration
 
-See [the next section](#performance-considerations) for a slightly more detailed breakdown of certain, performance-relevant, configuration options.
+You can configure the behaviour of the script using either command flags, a config file or both. An explanation of the individual settings available can be found below.
 
-### command flags
+## command flags
 
 If you want more control over the script, it supports a variety of command flags, all of which can be viewed with the `-h`/`-help` flag.
 
--   #### `-del`/`-delete`
-    Whether you want to delete duplicate and aggregator images (default `true`)
--   #### `-dt`/`-directory-threads`
-    How many directory entries to process simultaneously (default `20`), only applicable if walking subdirectories is enabled. Set to `1`/`0` to disable.
--   #### `-dir`
+-   ### `-del`/`-delete`
+    Whether you want to delete images matching your searching criteria (default `true`)
+-   ### `-dir`/`-directory`
     The directory to execute this script in (defaults to the current directory)
--   #### `-det`/`-directory-entry-threads`
-    How many directory entries/files to process simultaneously (default `5`). Set to `1`/`0` to disable.
--   #### `-dup`/`-duplicates`
-    Whether to check for duplicate images within a directory.
--   #### `-l`/`-log`
+-   ### `-dup`/`-duplicates`
+    Whether to check for duplicate images within a directory (default `true`).<br>
+    If there are two identical images within the same directory, the more inset (closer to the middle of the directory) one will be the one flagged as duplicate (the intention behind this was to remove duplicate credit pages in the middle of a chapter).
+-   ### `-l`/`-log`
     Whether to create a logfile for actions performed by the script (default `true`)
--   #### `-lat`/`-log-at`
+-   ### `-lat`/`-log-at`
     Where to store logfiles, if logging is enabled. Defaults to a folder named `mango peels` in the current directory.
--   #### `-s`/`-site`
-    Which aggreagtor site(s)'s images to search for. You can set this flag multiple times to supply multiple values. By default, all aggregator sites' images will be used.
--   #### `-w`/`-walk`
+-   ### `-s`/`-site`
+    Which aggreagtor site(s)'s images to search for. You can set this flag multiple times to supply multiple values. By default, all aggregator sites' images will be used. Set to `none` to disable.
+-   ### `-t`/`-threads`
+    How many directories to process simultaneously (default `10`). Only applicable if walking subdirectories is enabled. Set to `1`/`0` to disable.
+-   ### `-w`/`-walk`
     Whether to recursively process subdirectories, if there are any (default `true`)
 
-### config file
+## config file
 
-All options can be set using a config file instead as well. The `config.json` file **must be located in the same directory as the script** to take effect. Command flags will take precedence over the config file, meaning you can use it to store your baseline settings and set command flags to overrule them on the fly as needed. A sample `config.json` file, set to the [command flag](#command-flags) defaults comes with all binaries and can be found [here](https://github.com/valdotle/mangopeeler/tree/main/config.json) as well.
+All options can be set using a config file instead as well. The `config.json` file **must be located in the same directory as the script** to take effect. Command flags will take precedence over the config file, meaning you can use it to store your baseline settings and set command flags to overrule them on the fly as needed. A sample `config.json` file, reflecting the [command flag](#command-flags) defaults comes with all binaries and can be found [here](https://github.com/valdotle/mangopeeler/tree/main/config.json) as well.
 
-# performance considerations
+# performance
 
-While the configuration allows for quite some tweaking performance wise, the current defaults are based purely on my educated guesses and limited testing. I should probably do some (proper) benchmarking at some point to find good defaults. That being said, the exact tuning heavily depends on your hardware specifications (primarily disk reading speed), the length of chapters, the average image size, the overall directory structure you want to scan and how much resources you want the script to use, to name just a few things.
+Adjusting the number of threads has the most impact on performance. While more threads allow to process more directories simultaneously, this comes with increased resource usage as well.
 
-Here are some theoretical performance considerations when it comes to `directory-entry-threads`, `directory-threads`, `site` and `walk` though:
+When trying to maximize the file processing speed, the limiting factor will usually be your disk's reading speed. Use the task manager (or similar tooling) to check when disk utilization reaches 100%. At this point, increasing the number of threads will become less effective or even counter productive. Obviously, you can also run the script with a lower number of threads to consume less resources, if you only want it to run in the background for example.
 
-<details>
-  <summary><h3><code>site</code> and <code>walk</code></h3></summary>
-  If processing subdirectories is enabled with `walk` (the default), the script will not only scan the current/specified directory, but all its subdirectories as well. That means more directory entries to look through and thus naturely more compute. Make sure to set `walk` to `false` if you only mean to scan a specific directory's contents to avoid wasting resources.
+The current number of threads is simply an educated guess made by me based on my limited testing. I _should_ probably do some benchmarking to find an optimal default at some point. Then again, there are many factors that are very dependend on your hardware specs and optimizations goals so those probably would have limited use anyway.
 
-Similarly, `site` allows to limit which aggregator site's images to look for. By default, the script will search all aggregator images. But if you are going to scan a bunch of Vietnamese manga, a Portugese aggregator's images are rather unlikely to appear - and vice versa. By specifying which aggregator's images to look for, you can reduce the time it takes to match an image against the aggregator images.
-
-</details><details>
-  <summary><h3><code>directory-threads</code> and <code>directory-entry-threads</code></h3></summary>
-  Directory entry threads is the number of threads allocated per directory. That is, if the folder for a chapter contains X files, each directory entry thread can process one of them simultaneously. Increasing the number of directory entry threads might be useful when processing directories with many entries (think long chapters). On the other hand, titles with short chapters (=few entries per directory) might be unable to utilize multiple threads processing directory entries. In this case, reducing directory entry threads or even disabling threading on directory level might be beneficial. Additionally, managing threads introduces a certain performance overhead which may not outweigh the performance gains earned from threading so using a very low number of directory entry thread will probably your reduce performance as well.
-
-Similarly, directory threads determine the number of directories (think chapters) that can be processed simultaneously. While increasing directory threads is mainly a means to increase resource utilization, decreasing or disabling directory entry threads is useful when processing a single/small number of directories only or to run the script in the background.
-
-The total number of threads is simply the product of `directory-threads` and `directory-entry-threads`. This number is the main performance impacting metric. Not only will it increase CPU load, and memory usage, more threads will also increase the number of files read at the same time resulting in higher disk utilization. I'd suggest you find a value that either meets your resource usage limits or results in 100% disk usage using the task manager (or similar tooling). In this case, the maximum read speed of your (hard)drive becomes the limitting factor to the script's performance, so adding more threads will mainly introduce overhead instead of increasing productivity.
-
-For a given number of total threads, the ratio of `directory-threads` and `directory-entry-threads` should mainly have an effect on memory usage, if checking for duplicates within a directory is enabled:<br>
-Increasing the number of directory threads while reducing the number of directory entry threads will lead to an increase in memory usage and vice versa.
-
-</details>
-
-### TLDR
-
--   Disabling stuff reduces resources used.
--   More threads = higher resource utilization. Don't increase threads further once disk usage hits 100%.
--   Longer chapters → consider increasing the number of directory entry threads.
--   For a given total number of threads, allocating more threads to `directory-threads` while decreasing `directory-entry-threads` should decrease memory usage.
-
-The opposite is true for all of the above.
-
-Very low values for either `directory-threads` or `directory-entry-threads` can hamper performance rather than improving it. Consider disabling the respective option.
-
-# notes
+# issues
 
 While I've aimed for this script to run as stable as possible (or did I?), I won't make any guarantees. Feel free to open an [issue](https://github.com/valdotle/mangopeeler/issues) if you run into any problems though!
 

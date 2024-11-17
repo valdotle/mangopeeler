@@ -9,7 +9,6 @@ import (
 	"slices"
 	"strings"
 
-	"github.com/valdotle/mangopeeler/internal"
 	"github.com/vitali-fedulov/images4"
 )
 
@@ -23,22 +22,22 @@ func matchAggregator(icon images4.IconT) bool {
 	return false
 }
 
-func matchDuplicates(d []internal.DirEntryResponse) {
+func matchDuplicates(d []dirEntryResponse) {
 	for i, search := range d {
 		zero := i + 1
 		if zero > len(d) {
 			break
 		}
 		for j, match := range d[zero:] {
-			if images4.Similar(search.Icon, match.Icon) {
+			if images4.Similar(search.icon, match.icon) {
 				var path string
 				if len(d)-j > 2*zero {
-					path = match.Filename
-					logToFile.Printf("image %s is a duplicate of %s", path, search.Filename)
+					path = match.filename
+					logToFile.Printf("image %s is a duplicate of %s", path, search.filename)
 					d = slices.Delete(d, j+zero, j+zero+1)
 				} else {
-					path = search.Filename
-					logToFile.Printf("image %s is a duplicate of %s", path, match.Filename)
+					path = search.filename
+					logToFile.Printf("image %s is a duplicate of %s", path, match.filename)
 					d = slices.Delete(d, i, i+1)
 				}
 

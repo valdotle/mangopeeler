@@ -19,8 +19,8 @@ func (p Pool) Finish() {
 	<-p.wait
 }
 
-func NewPool(dirThreads, dirEntryThreads uint, processor func(string)) Pool {
-	p := Pool{make(chan string, dirEntryThreads*dirThreads), make(chan any, dirThreads), make(chan any), nil, dirThreads}
+func NewPool(threads uint, processor func(string)) Pool {
+	p := Pool{make(chan string, threads), make(chan any, threads), make(chan any), nil, threads}
 
 	go p.run(processor)
 

@@ -13,9 +13,9 @@ import (
 )
 
 var (
-	options                   config
-	sitelist                  = siteEnum()
-	dirThreaded, fileThreaded bool
+	options     config
+	sitelist    = siteEnum()
+	dirThreaded bool
 )
 
 type stringArrayFlag []string
@@ -53,14 +53,14 @@ func siteEnum() stringArrayFlag {
 }
 
 var flagAliases = map[string]string{
-	"delete":                  "del",
-	"directory-entry-threads": "det",
-	"directory-threads":       "dt",
-	"duplicates":              "dup",
-	"log-at":                  "lat",
-	"log":                     "l",
-	"site":                    "s",
-	"walk":                    "w",
+	"delete":     "del",
+	"directory":  "dir",
+	"duplicates": "dup",
+	"log-at":     "lat",
+	"log":        "l",
+	"site":       "s",
+	"threads":    "t",
+	"walk":       "w",
 }
 
 func setupFlags() {
@@ -78,10 +78,9 @@ func setupFlags() {
 	}
 
 	// set flags
-	flag.BoolVar(&options.Delete, "delete", options.Delete, "whether to delete located duplicates")
-	flag.StringVar(&options.Dir, "dir", options.Dir, "the directory to execute this script in")
-	flag.UintVar(&options.DirThreads, "directory-threads", options.DirThreads, "how many directories to process simultaneously (if applicable)")
-	flag.UintVar(&options.DirEntryThreads, "directory-entry-threads", options.DirEntryThreads, "how many directory entries to process simultaneously")
+	flag.BoolVar(&options.Delete, "delete", options.Delete, "whether to delete images matching your search criteria")
+	flag.StringVar(&options.Dir, "directory", options.Dir, "the directory to execute this script in")
+	flag.UintVar(&options.Threads, "threads", options.Threads, "how many directories to process simultaneously (if applicable)")
 	flag.BoolVar(&options.Duplicates, "duplicates", options.Duplicates, "whether to check for duplicate images within directories")
 	flag.BoolVar(&options.Log, "log", options.Log, "whether to create logfiles for actions performed by the script")
 	flag.StringVar(&options.LogAt, "log-at", options.LogAt, "where to store logfiles (if applicable)")
@@ -96,6 +95,5 @@ func setupFlags() {
 
 	flag.Parse()
 
-	dirThreaded = options.DirThreads > 1 && options.Walk
-	fileThreaded = options.DirEntryThreads > 1
+	dirThreaded = options.Threads > 1 && options.Walk
 }
