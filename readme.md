@@ -72,7 +72,7 @@ All options can be set using a config file instead as well. The `config.json` fi
 
 # false positives
 
-The script uses a similarity metric to determine images matching aggregator images and duplicate images. Since exact byte equality is pretty useless, I'm resorting to this method which in turn means, there's a chance for images to be flagged incorrectly. Especially the duplicate check is prone to mistakes when there are images with few details (prone meaning I've had one case of an almost completely black image with a different word in the middle so far). I'll have to see if/to which extent I can optimize the similarity metric to minimize the numbers of those false positives. In the meantime, you can disable deleting and double check the duplicates found by the script with the log output first, if you want to be absolutely safe.
+The script uses a similarity metric to determine images matching aggregator images and duplicate images. Since exact byte equality is pretty useless, I'm resorting to this method which in turn means, there's a chance for images to be flagged incorrectly. Especially the duplicate check is prone to mistakes when there are images with few details (prone meaning I've had one case of an almost [completely black image with a different word in the middle so far](https://github.com/valdotle/mangopeeler/tree/main/false-positives)). I'll have to see if/to which extent I can optimize the similarity metric to minimize the numbers of those false positives. In the meantime, you can disable deleting and double check the duplicates found by the script with the log output first, if you want to be absolutely safe.
 
 # performance
 
