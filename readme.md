@@ -14,7 +14,7 @@ I've also been thinking of various other features that I might add at a later po
 
 To get started, download the script for your corresponding OS [here](https://github.com/valdotle/mangopeeler/releases/latest). While the script _should_ be cross-platform compatible, I'm only able to test on Windows, so keep that in mind.
 
-Currently, **unzipping** folders **isn't supported**. That means, the script will only be able to process **images** that are simply **located in a directory**. When coding, I was assuming a directory structure like so:
+Currently, **unzipping** folders **isn't supported**. That means the script will only be able to process **images** that are simply **located in a directory**. When coding, I was assuming a directory structure like so:
 
 ```
 manga
@@ -62,7 +62,7 @@ If you want more control over the script, it supports a variety of command flags
 -   ### `-lat`/`-log-at`
     Where to store logfiles, if logging is enabled. Defaults to a folder named `mango peels` in the current directory.
 -   ### `-s`/`-site`
-    Which aggreagtor site(s)'s images to search for. You can set this flag multiple times to supply multiple values. By default, all aggregator sites' images will be used. Set to `none` to disable.
+    Which aggregator site(s)'s images to search for. You can set this flag multiple times to supply multiple values. By default, all aggregator sites' images will be used. Set to `none` to disable.
 -   ### `-t`/`-threads`
     How many directories to process simultaneously (default `10`). Only applicable if walking subdirectories is enabled. Set to `1`/`0` to disable.
 -   ### `-w`/`-walk`
@@ -74,7 +74,7 @@ All options can be set using a config file instead as well. The `config.json` fi
 
 # false positives
 
-The script uses a similarity metric to determine images matching aggregator images and duplicate images. Since exact byte equality is pretty useless, I'm resorting to this method which in turn means, there's a chance for images to be flagged incorrectly. Especially the duplicate check is prone to mistakes when there are images with few details (prone meaning I've had one case of an almost [completely black image with a different word in the middle so far](https://github.com/valdotle/mangopeeler/tree/main/false-positives)). I'll have to see if/to which extent I can optimize the similarity metric to minimize the numbers of those false positives. In the meantime, you can disable deleting and double check the duplicates found by the script with the log output first, if you want to be absolutely safe.
+The script uses a similarity metric to determine images matching aggregator images and duplicate images. Since exact byte equality is pretty useless, I'm resorting to this method which in turn means, there's a chance for images to be flagged incorrectly. Especially the duplicate check is prone to mistakes when there are images with few details (prone meaning I've had one case of an almost [completely black image with a different word in the middle so far](https://github.com/valdotle/mangopeeler/tree/main/false%20positives)). I'll have to see if/to which extent I can optimize the similarity metric to minimize the number of those false positives. In the meantime, you can disable deleting and double check the duplicates found by the script with the log output first, if you want to be absolutely safe.
 
 # performance
 
@@ -82,7 +82,7 @@ Adjusting the number of threads has the most impact on performance. While more t
 
 When trying to maximize the file processing speed, the limiting factor will usually be your disk's reading speed. Use the task manager (or similar tooling) to check when disk utilization reaches 100%. At this point, increasing the number of threads will become less effective or even counter productive. Obviously, you can also run the script with a lower number of threads to consume less resources, if you only want it to run in the background for example.
 
-The current number of threads is simply an educated guess made by me based on my limited testing. I _should_ probably do some benchmarking to find an optimal default at some point. Then again, there are many factors that are very dependend on your hardware specs and optimizations goals so those probably would have limited use anyway.
+The current number of threads is simply an educated guess made by me based on my limited testing. I _should_ probably do some benchmarking to find an optimal default at some point. Then again, there are many factors that are very dependent on your hardware specs and optimization goals so those probably would have limited use anyway.
 
 # issues
 
