@@ -8,7 +8,7 @@ I've also been thinking of various other features that I might add at a later po
 -   [ ] renaming images (of a directory) to have incrementing numbers starting at 1, to patch gaps resulting from deleting images (or other reasons)
 -   [ ] deleting images that can't be read and thus are most likely corrupted/malformed
 -   [ ] filter (and remove) files by filename/matching patterns and regex/file extension/...
--   [ ] support to filter for custom images not part of the script
+-   [x] support to filter for custom images not part of the script
 
 # usage
 
@@ -46,6 +46,8 @@ You can configure the behaviour of the script using either command flags, a conf
 
 If you want more control over the script, it supports a variety of command flags, all of which can be viewed with the `-h`/`-help` flag.
 
+-   ### `-c`/`-custom-images`
+    Provide the path to a directory containing custom images to check for, similar to the aggregator ones included in the script. Defaults to a folder named `custom` in the current directory.
 -   ### `-del`/`-delete`
     Whether you want to delete directory entries matching your searching criteria (default `true`)
 -   ### `-dir`/`-directory`

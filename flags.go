@@ -53,6 +53,7 @@ func siteEnum() stringArrayFlag {
 }
 
 var flagAliases = map[string]string{
+	"custom-images":   "c",
 	"delete":          "del",
 	"directory":       "dir",
 	"duplicates":      "dup",
@@ -69,7 +70,7 @@ func setupFlags() {
 	fileData, err := os.ReadFile(configFileName)
 	if err != nil && !errors.Is(err, os.ErrNotExist) {
 		log.Panicf("failed to open config, error:\n%s", err.Error())
-	} else if err == nil {
+	} else if err != nil {
 		data = fileData
 	}
 
@@ -79,6 +80,7 @@ func setupFlags() {
 	}
 
 	// set flags
+	flag.StringVar(&options.Custom, "custom-images", options.Custom, "path to directory of custom filter images to use")
 	flag.BoolVar(&options.Delete, "delete", options.Delete, "whether to delete directory entries matching your search criteria")
 	flag.StringVar(&options.Dir, "directory", options.Dir, "the directory to execute this script in")
 	flag.BoolVar(&options.Duplicates, "duplicates", options.Duplicates, "whether to check for duplicate images within directories")

@@ -1,4 +1,5 @@
 {
+    "custom-images": "./custom",
     "delete": true,
     "directory": ".",
     "duplicates": false,

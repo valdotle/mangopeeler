@@ -31,6 +31,8 @@ func processDir(path string) {
 
 	// empty directory
 	if entries := len(ds); entries == 0 {
+		totalReads.Add(1)
+
 		if options.EmptyDir {
 			logToFile.Printf("[empty directory] at %s", path)
 			deleteDirEntry(path)
@@ -57,6 +59,7 @@ func processDir(path string) {
 	defer deferfunc()
 
 	for _, d := range ds {
+		totalReads.Add(1)
 		dirProcessor(d)
 	}
 }

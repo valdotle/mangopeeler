@@ -10,11 +10,7 @@ import (
 	"github.com/vitali-fedulov/images4"
 )
 
-var imageExtensions = []string{".png", ".jpg", ".jpeg", ".gif"}
-
 func processDirEntry(path string, d fs.DirEntry, result *images4.IconT) error {
-	defer totalReads.Add(1)
-
 	if d.IsDir() {
 		if dirThreaded {
 			limit.Add(path)
@@ -27,7 +23,7 @@ func processDirEntry(path string, d fs.DirEntry, result *images4.IconT) error {
 	}
 
 	// not a (supported) image
-	if !slices.ContainsFunc(imageExtensions, func(e string) bool { return strings.HasSuffix(d.Name(), e) }) {
+	if !isSupportedImage(d) {
 		return nil
 	}
 
@@ -63,4 +59,10 @@ func deleteDirEntry(path string) {
 			logToFile.Printf("file deleted successfully")
 		}
 	}
+}
+
+var imageExtensions = []string{".png", ".jpg", ".jpeg", ".gif"}
+
+func isSupportedImage(d fs.DirEntry) bool {
+	return slices.ContainsFunc(imageExtensions, func(e string) bool { return strings.HasSuffix(d.Name(), e) })
 }

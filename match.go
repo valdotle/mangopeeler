@@ -2,8 +2,12 @@ package main
 
 import (
 	"embed"
+	"errors"
 	"image"
+	"io"
 	"io/fs"
+	"log"
+	"os"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -53,6 +57,10 @@ func matchDuplicates(d []dirEntryResponse) {
 var images embed.FS
 
 func initialize() error {
+	if err := filepath.WalkDir(options.Custom, customInitializer); err != nil && !errors.Is(err, os.ErrNotExist) {
+		log.Panicf("failed to read custom images, error:\n%s", err.Error())
+	}
+
 	return fs.WalkDir(images, "images", initializer)
 }
 
@@ -78,7 +86,30 @@ func initializer(path string, d fs.DirEntry, err error) error {
 
 	defer data.Close()
 
-	img, _, err := image.Decode(data)
+	return parseImage(data)
+}
+
+func customInitializer(path string, d fs.DirEntry, err error) error {
+	if err != nil {
+		return err
+	}
+
+	if d.IsDir() || !isSupportedImage(d) {
+		return nil
+	}
+
+	file, err := os.Open(path)
+	if err != nil {
+		return err
+	}
+
+	defer file.Close()
+
+	return parseImage(file)
+}
+
+func parseImage(file io.Reader) error {
+	img, _, err := image.Decode(file)
 	if err != nil {
 		return err
 	}
