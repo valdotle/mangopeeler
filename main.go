@@ -22,7 +22,12 @@ func main() {
 
 	walker(options.Dir)
 
-	log.Printf("\nscanned %d entries (including %d images) in %s", totalReads.Load(), imagesRead.Load(), time.Since(start).String())
+	log.Printf("\nscanned %d entries (including %d images) in %s with %d entries matching search criteria%s", totalReads.Load(), imagesRead.Load(), time.Since(start).String(), dirEntriesFound.Load(), func() string {
+		if options.Delete {
+			return " removed"
+		}
+		return ""
+	}())
 }
 
 var limit internal.Pool

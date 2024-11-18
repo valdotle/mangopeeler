@@ -1,7 +1,8 @@
 {
     "delete": true,
     "directory": ".",
-    "duplicates": true,
+    "duplicates": false,
+    "empty-dir": true,
     "log": true,
     "log-at": "./mango peels",
     "site": ["blogtruyen"],

@@ -6,6 +6,7 @@ type config struct {
 	Delete     bool            `json:"delete"`
 	Dir        string          `json:"directory"`
 	Duplicates bool            `json:"duplicates"`
+	EmptyDir   bool            `json:"empty-dir"`
 	Log        bool            `json:"log"`
 	LogAt      string          `json:"log-at"`
 	Sites      stringArrayFlag `json:"site"`

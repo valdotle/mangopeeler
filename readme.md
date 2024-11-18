@@ -4,7 +4,7 @@
 
 I've also been thinking of various other features that I might add at a later point, such as:
 
--   [ ] deleting empty directories
+-   [x] deleting empty directories
 -   [ ] renaming images (of a directory) to have incrementing numbers starting at 1, to patch gaps resulting from deleting images (or other reasons)
 -   [ ] deleting images that can't be read and thus are most likely corrupted/malformed
 -   [ ] filter (and remove) files by filename/matching patterns and regex/file extension/...
@@ -47,12 +47,14 @@ You can configure the behaviour of the script using either command flags, a conf
 If you want more control over the script, it supports a variety of command flags, all of which can be viewed with the `-h`/`-help` flag.
 
 -   ### `-del`/`-delete`
-    Whether you want to delete images matching your searching criteria (default `true`)
+    Whether you want to delete directory entries matching your searching criteria (default `true`)
 -   ### `-dir`/`-directory`
     The directory to execute this script in (defaults to the current directory)
 -   ### `-dup`/`-duplicates`
-    Whether to check for duplicate images within a directory (default `true`).<br>
+    Whether to check for duplicate images within a directory (default `false`). Not enabled by default, because there might be [false positives](#false-positives).<br>
     If there are two identical images within the same directory, the more inset (closer to the middle of the directory) one will be the one flagged as duplicate (the intention behind this was to remove duplicate credit pages in the middle of a chapter).
+-   ### `-edr`/`-empty-directory`
+    Whether to check for empty directories (default `true`)
 -   ### `-l`/`-log`
     Whether to create a logfile for actions performed by the script (default `true`)
 -   ### `-lat`/`-log-at`

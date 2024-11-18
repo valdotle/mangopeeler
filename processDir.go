@@ -31,6 +31,11 @@ func processDir(path string) {
 
 	// empty directory
 	if entries := len(ds); entries == 0 {
+		if options.EmptyDir {
+			logToFile.Printf("[empty directory] at %s", path)
+			deleteDirEntry(path)
+		}
+
 		return
 
 	} else

@@ -44,8 +44,8 @@ func closeLogs() {
 }
 
 var (
-	imagesRead, totalReads atomic.Uint32
-	start                  time.Time
+	imagesRead, totalReads, dirEntriesFound atomic.Uint32
+	start                                   time.Time
 )
 
 func progress() {

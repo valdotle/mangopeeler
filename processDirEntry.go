@@ -2,6 +2,7 @@ package main
 
 import (
 	"io/fs"
+	"log"
 	"os"
 	"slices"
 	"strings"
@@ -47,20 +48,19 @@ func processDirEntry(path string, d fs.DirEntry, result *images4.IconT) error {
 
 	if matchAggregator(icon) {
 		logToFile.Printf("[aggregator image] found at %s", path)
-		err = deleteDirEntry(path)
+		deleteDirEntry(path)
 	}
 
 	return err
 }
 
-func deleteDirEntry(path string) error {
+func deleteDirEntry(path string) {
+	dirEntriesFound.Add(1)
 	if options.Delete {
 		if err := os.Remove(path); err != nil {
-			return err
+			log.Panicf("failed to delete file, error:\n%s", err.Error())
+		} else {
+			logToFile.Printf("file deleted successfully")
 		}
-
-		logToFile.Println("file deleted successfully")
 	}
-
-	return nil
 }

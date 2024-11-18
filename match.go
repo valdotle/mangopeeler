@@ -4,7 +4,6 @@ import (
 	"embed"
 	"image"
 	"io/fs"
-	"log"
 	"path/filepath"
 	"slices"
 	"strings"
@@ -42,9 +41,7 @@ func matchDuplicates(d []dirEntryResponse) {
 					d = slices.Delete(d, i, i+1)
 				}
 
-				if err := deleteDirEntry(path); err != nil {
-					log.Panicf("failed to delete duplicate file, error:\n%s", err.Error())
-				}
+				deleteDirEntry(path)
 
 				matchDuplicates(d)
 			}
