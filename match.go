@@ -5,7 +5,7 @@ import (
 	"image"
 	"io/fs"
 	"log"
-	"os"
+	"path/filepath"
 	"slices"
 	"strings"
 
@@ -31,20 +31,19 @@ func matchDuplicates(d []dirEntryResponse) {
 		for j, match := range d[zero:] {
 			if images4.Similar(search.icon, match.icon) {
 				var path string
+				var dir = filepath.Dir(search.filename)
 				if len(d)-j > 2*zero {
 					path = match.filename
-					logToFile.Printf("image %s is a duplicate of %s", path, search.filename)
+					logToFile.Printf("[duplicate image] at %s | %s is a duplicate of %s", dir, path, search.filename)
 					d = slices.Delete(d, j+zero, j+zero+1)
 				} else {
 					path = search.filename
-					logToFile.Printf("image %s is a duplicate of %s", path, match.filename)
+					logToFile.Printf("[duplicate image] at %s | %s is a duplicate of %s", dir, path, match.filename)
 					d = slices.Delete(d, i, i+1)
 				}
 
-				if options.Delete {
-					if err := os.Remove(path); err != nil {
-						log.Panicf("failed to delete duplicate file, error:\n%s", err.Error())
-					}
+				if err := deleteDirEntry(path); err != nil {
+					log.Panicf("failed to delete duplicate file, error:\n%s", err.Error())
 				}
 
 				matchDuplicates(d)

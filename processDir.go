@@ -29,8 +29,13 @@ func processDir(path string) {
 		deferfunc    = func() {}
 	)
 
+	// empty directory
+	if entries := len(ds); entries == 0 {
+		return
+
+	} else
 	// without caring for duplicates
-	if !options.Duplicates {
+	if !options.Duplicates || entries < 2 {
 		dirProcessor = func(d fs.DirEntry) { dirEntry(path, d) }
 
 	} else

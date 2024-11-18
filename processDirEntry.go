@@ -34,7 +34,7 @@ func processDirEntry(path string, d fs.DirEntry, result *images4.IconT) error {
 
 	img, err := images4.Open(path)
 	if err != nil {
-		logToFile.Printf("failed to read image at %s", path)
+		logToFile.Printf("[corrupted image] failed to read image at %s", path)
 
 		return nil
 	}
@@ -46,14 +46,20 @@ func processDirEntry(path string, d fs.DirEntry, result *images4.IconT) error {
 	}
 
 	if matchAggregator(icon) {
-		logToFile.Printf("found matching file at %s", path)
-		if options.Delete {
-			if err = os.Remove(path); err != nil {
-				return err
-			}
+		logToFile.Printf("[aggregator image] found at %s", path)
+		err = deleteDirEntry(path)
+	}
 
-			logToFile.Println("file deleted successfully")
+	return err
+}
+
+func deleteDirEntry(path string) error {
+	if options.Delete {
+		if err := os.Remove(path); err != nil {
+			return err
 		}
+
+		logToFile.Println("file deleted successfully")
 	}
 
 	return nil
