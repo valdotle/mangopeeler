@@ -68,6 +68,10 @@ If you want more control over the script, it supports a variety of command flags
 
 All options can be set using a config file instead as well. The `config.json` file **must be located in the same directory as the script** to take effect. Command flags will take precedence over the config file, meaning you can use it to store your baseline settings and set command flags to overrule them on the fly as needed. A sample `config.json` file, reflecting the [command flag](#command-flags) defaults comes with all binaries and can be found [here](https://github.com/valdotle/mangopeeler/tree/main/config.json) as well.
 
+# false positives
+
+The script uses a similarity metric to determine images matching aggregator images and duplicate images. Since exact byte equality is pretty useless, I'm resorting to this method which in turn means, there's a chance for images to be flagged incorrectly. Especially the duplicate check is prone to mistakes when there are images with few details (prone meaning I've had one case of an almost completely black image with a different word in the middle so far). I'll have to see if/to which extent I can optimize the similarity metric to minimize the numbers of those false positives. In the meantime, you can disable deleting and double check the duplicates found by the script with the log output first, if you want to be absolutely safe.
+
 # performance
 
 Adjusting the number of threads has the most impact on performance. While more threads allow to process more directories simultaneously, this comes with increased resource usage as well.
