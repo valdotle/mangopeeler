@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"io/fs"
 	"log"
 	"os"
@@ -10,7 +11,7 @@ import (
 	"github.com/vitali-fedulov/images4"
 )
 
-func processDirEntry(path string, d fs.DirEntry, result *images4.IconT) error {
+func processDirEntry(path string, d fs.DirEntry) (iconP *images4.IconT, err error) {
 	if d.IsDir() {
 		if dirThreaded {
 			limit.Add(path)
@@ -19,12 +20,12 @@ func processDirEntry(path string, d fs.DirEntry, result *images4.IconT) error {
 			processDir(path)
 		}
 
-		return nil
+		return
 	}
 
-	// not a (supported) image
+	// not a (supported) image extension
 	if !isSupportedImage(d) {
-		return nil
+		return
 	}
 
 	defer imagesRead.Add(1)
@@ -33,27 +34,28 @@ func processDirEntry(path string, d fs.DirEntry, result *images4.IconT) error {
 	if err != nil {
 		logToFile.Printf("[corrupted image] failed to read image at %s", path)
 
-		return nil
+		if options.Broken {
+			deleteDirEntry(path)
+		}
+
+		return nil, nil
 	}
 
 	icon := images4.Icon(img)
 
-	if result != nil {
-		*result = icon
-	}
-
-	if matchAggregator(icon) {
-		logToFile.Printf("[aggregator image] found at %s", path)
+	if matchCustom(icon) {
+		logToFile.Printf("[custom image] found at %s", path)
 		deleteDirEntry(path)
+		return
 	}
 
-	return err
+	return &icon, nil
 }
 
 func deleteDirEntry(path string) {
 	dirEntriesFound.Add(1)
 	if options.Delete {
-		if err := os.Remove(path); err != nil {
+		if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
 			log.Panicf("failed to delete file, error:\n%s", err.Error())
 		} else {
 			logToFile.Printf("file deleted successfully")
@@ -64,5 +66,5 @@ func deleteDirEntry(path string) {
 var imageExtensions = []string{".png", ".jpg", ".jpeg", ".gif"}
 
 func isSupportedImage(d fs.DirEntry) bool {
-	return slices.ContainsFunc(imageExtensions, func(e string) bool { return strings.HasSuffix(d.Name(), e) })
+	return slices.ContainsFunc(imageExtensions, func(e string) bool { return strings.HasSuffix(strings.ToLower(d.Name()), e) })
 }
