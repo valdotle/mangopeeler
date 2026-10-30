@@ -5,13 +5,22 @@ import (
 	"log"
 	"os"
 	"path/filepath"
+	"strings"
 
 	"github.com/vitali-fedulov/images4"
 )
 
 func processDir(path string) {
+
 	if dirThreaded {
 		defer limit.Remove()
+	}
+
+	current, err := filepath.Abs(path)
+	custom, err := filepath.Abs(options.Custom)
+
+	if strings.HasPrefix(current, custom) {
+		return
 	}
 
 	ds, err := os.ReadDir(path)

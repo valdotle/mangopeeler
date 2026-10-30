@@ -1,4 +1,5 @@
 {
+    "broken-images": true,
     "custom-images": "./custom",
     "delete": true,
     "directory": ".",
@@ -6,7 +7,6 @@
     "empty-dir": true,
     "log": true,
     "log-at": "./mango peels",
-    "site": ["blogtruyen"],
     "threads": 10,
     "walk": true
 }
