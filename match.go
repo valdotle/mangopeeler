@@ -1,7 +1,6 @@
 package main
 
 import (
-	"embed"
 	"errors"
 	"image"
 	"io"
@@ -10,12 +9,11 @@ import (
 	"os"
 	"path/filepath"
 	"slices"
-	"strings"
 
 	"github.com/vitali-fedulov/images4"
 )
 
-func matchAggregator(icon images4.IconT) bool {
+func matchCustom(icon images4.IconT) bool {
 	for _, match := range matchImages {
 		if images4.Similar(icon, match) {
 			return true
@@ -53,40 +51,12 @@ func matchDuplicates(d []dirEntryResponse) {
 	}
 }
 
-//go:embed images
-var images embed.FS
-
 func initialize() error {
 	if err := filepath.WalkDir(options.Custom, customInitializer); err != nil && !errors.Is(err, os.ErrNotExist) {
 		log.Panicf("failed to read custom images, error:\n%s", err.Error())
 	}
 
-	return fs.WalkDir(images, "images", initializer)
-}
-
-func initializer(path string, d fs.DirEntry, err error) error {
-	if err != nil {
-		return err
-	}
-
-	if d.IsDir() {
-		return nil
-	}
-
-	submatch := func(m string) bool { return strings.Contains(path, m) }
-
-	if !slices.ContainsFunc(options.Sites, submatch) {
-		return nil
-	}
-
-	data, err := images.Open(path)
-	if err != nil {
-		return err
-	}
-
-	defer data.Close()
-
-	return parseImage(data)
+	return nil
 }
 
 func customInitializer(path string, d fs.DirEntry, err error) error {

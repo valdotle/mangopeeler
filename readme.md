@@ -6,7 +6,7 @@ I've also been thinking of various other features that I might add at a later po
 
 -   [x] deleting empty directories
 -   [ ] renaming images (of a directory) to have incrementing numbers starting at 1, to patch gaps resulting from deleting images (or other reasons)
--   [ ] deleting images that can't be read and thus are most likely corrupted/malformed
+-   [x] deleting images that can't be read and thus are most likely corrupted/malformed
 -   [ ] filter (and remove) files by filename/matching patterns and regex/file extension/...
 -   [x] support to filter for custom images not part of the script
 
@@ -46,6 +46,8 @@ You can configure the behaviour of the script using either command flags, a conf
 
 If you want more control over the script, it supports a variety of command flags, all of which can be viewed with the `-h`/`-help` flag.
 
+-   ### `-bri`/`-broken-images`
+    Whether to check for images that can't be parsed, indicating they might be corrupted/malformed/broken.
 -   ### `-c`/`-custom-images`
     Provide the path to a directory containing custom images to check for, similar to the aggregator ones included in the script. Defaults to a folder named `custom` in the current directory.
 -   ### `-del`/`-delete`
@@ -61,8 +63,6 @@ If you want more control over the script, it supports a variety of command flags
     Whether to create a logfile for actions performed by the script (default `true`)
 -   ### `-lat`/`-log-at`
     Where to store logfiles, if logging is enabled. Defaults to a folder named `mango peels` in the current directory.
--   ### `-s`/`-site`
-    Which aggregator site(s)'s images to search for. You can set this flag multiple times to supply multiple values. By default, all aggregator sites' images will be used. Set to `none` to disable.
 -   ### `-t`/`-threads`
     How many directories to process simultaneously (default `10`). Only applicable if walking subdirectories is enabled. Set to `1`/`0` to disable.
 -   ### `-w`/`-walk`

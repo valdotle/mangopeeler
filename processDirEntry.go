@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"io/fs"
 	"log"
 	"os"
@@ -22,7 +23,7 @@ func processDirEntry(path string, d fs.DirEntry, result *images4.IconT) error {
 		return nil
 	}
 
-	// not a (supported) image
+	// not a (supported) image extension
 	if !isSupportedImage(d) {
 		return nil
 	}
@@ -33,6 +34,10 @@ func processDirEntry(path string, d fs.DirEntry, result *images4.IconT) error {
 	if err != nil {
 		logToFile.Printf("[corrupted image] failed to read image at %s", path)
 
+		if options.Broken {
+			deleteDirEntry(path)
+		}
+
 		return nil
 	}
 
@@ -42,7 +47,7 @@ func processDirEntry(path string, d fs.DirEntry, result *images4.IconT) error {
 		*result = icon
 	}
 
-	if matchAggregator(icon) {
+	if matchCustom(icon) {
 		logToFile.Printf("[aggregator image] found at %s", path)
 		deleteDirEntry(path)
 	}
@@ -53,7 +58,7 @@ func processDirEntry(path string, d fs.DirEntry, result *images4.IconT) error {
 func deleteDirEntry(path string) {
 	dirEntriesFound.Add(1)
 	if options.Delete {
-		if err := os.Remove(path); err != nil {
+		if err := os.Remove(path); err != nil && !errors.Is(err, os.ErrNotExist) {
 			log.Panicf("failed to delete file, error:\n%s", err.Error())
 		} else {
 			logToFile.Printf("file deleted successfully")
