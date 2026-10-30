@@ -5,21 +5,32 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
 
 	"github.com/vitali-fedulov/images4"
 )
 
-func processDir(path string) {
+var custom string
 
+func initializeCustomDir() {
+	abs, err := filepath.Abs(options.Custom)
+	if err != nil {
+		log.Fatal(err)
+	}
+
+	custom = abs
+}
+
+func processDir(path string) {
 	if dirThreaded {
 		defer limit.Remove()
 	}
 
 	current, err := filepath.Abs(path)
-	custom, err := filepath.Abs(options.Custom)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-	if strings.HasPrefix(current, custom) {
+	if current == custom {
 		return
 	}
 
@@ -33,10 +44,7 @@ func processDir(path string) {
 		}(), err.Error())
 	}
 
-	var (
-		dirProcessor func(d fs.DirEntry)
-		deferfunc    = func() {}
-	)
+	var dirProcessor func(d fs.DirEntry)
 
 	// empty directory
 	if entries := len(ds); entries == 0 {
@@ -52,20 +60,16 @@ func processDir(path string) {
 	} else
 	// without caring for duplicates
 	if !options.Duplicates || entries < 2 {
-		dirProcessor = func(d fs.DirEntry) { dirEntry(path, d) }
+		dirProcessor = dirEntry(path)
 
 	} else
 	// with duplicates check
 	{
 		var results []dirEntryResponse
-		dirProcessor = func(d fs.DirEntry) {
-			results = append(results, dirEntryResponse{filename: fileName(path, d), icon: dirEntryWithResult(path, d)})
-		}
+		dirProcessor = dirEntryWithResult(path, &results)
 
-		deferfunc = func() { matchDuplicates(results) }
+		defer matchDuplicates(&results)
 	}
-
-	defer deferfunc()
 
 	for _, d := range ds {
 		totalReads.Add(1)
@@ -73,26 +77,29 @@ func processDir(path string) {
 	}
 }
 
-func dirEntry(path string, d fs.DirEntry) {
-	if err := processDirEntry(fileName(path, d), d, nil); err != nil {
-		log.Fatal(err)
+func dirEntry(path string) func(d fs.DirEntry) {
+	return func(d fs.DirEntry) {
+		if _, err := processDirEntry(filePath(path, d), d); err != nil {
+			log.Fatal(err)
+		}
 	}
 }
 
-func dirEntryWithResult(path string, d fs.DirEntry) images4.IconT {
-	var result images4.IconT
-	if err := processDirEntry(fileName(path, d), d, &result); err != nil {
-		log.Fatal(err)
+func dirEntryWithResult(path string, results *[]dirEntryResponse) func(d fs.DirEntry) {
+	return func(d fs.DirEntry) {
+		if result, err := processDirEntry(filePath(path, d), d); err != nil {
+			log.Fatal(err)
+		} else if result != nil {
+			*results = append(*results, dirEntryResponse{filepath: filePath(path, d), icon: *result})
+		}
 	}
-
-	return result
 }
 
-func fileName(path string, d fs.DirEntry) string {
+func filePath(path string, d fs.DirEntry) string {
 	return filepath.Join(path, d.Name())
 }
 
 type dirEntryResponse struct {
-	filename string
+	filepath string
 	icon     images4.IconT
 }

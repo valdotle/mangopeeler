@@ -16,7 +16,7 @@ var (
 	logfile   *os.File
 )
 
-func setupLogs() {
+func startLogs() {
 	if options.Log {
 		if err := os.MkdirAll(filepath.Clean(options.LogAt), os.ModePerm); err != nil {
 			log.Panicf("failed to open logfile directory, error\n:%s", err.Error())

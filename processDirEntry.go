@@ -11,7 +11,7 @@ import (
 	"github.com/vitali-fedulov/images4"
 )
 
-func processDirEntry(path string, d fs.DirEntry, result *images4.IconT) error {
+func processDirEntry(path string, d fs.DirEntry) (iconP *images4.IconT, err error) {
 	if d.IsDir() {
 		if dirThreaded {
 			limit.Add(path)
@@ -20,12 +20,12 @@ func processDirEntry(path string, d fs.DirEntry, result *images4.IconT) error {
 			processDir(path)
 		}
 
-		return nil
+		return
 	}
 
 	// not a (supported) image extension
 	if !isSupportedImage(d) {
-		return nil
+		return
 	}
 
 	defer imagesRead.Add(1)
@@ -38,21 +38,18 @@ func processDirEntry(path string, d fs.DirEntry, result *images4.IconT) error {
 			deleteDirEntry(path)
 		}
 
-		return nil
+		return nil, nil
 	}
 
 	icon := images4.Icon(img)
 
-	if result != nil {
-		*result = icon
-	}
-
 	if matchCustom(icon) {
-		logToFile.Printf("[aggregator image] found at %s", path)
+		logToFile.Printf("[custom image] found at %s", path)
 		deleteDirEntry(path)
+		return
 	}
 
-	return err
+	return &icon, nil
 }
 
 func deleteDirEntry(path string) {
@@ -69,5 +66,5 @@ func deleteDirEntry(path string) {
 var imageExtensions = []string{".png", ".jpg", ".jpeg", ".gif"}
 
 func isSupportedImage(d fs.DirEntry) bool {
-	return slices.ContainsFunc(imageExtensions, func(e string) bool { return strings.HasSuffix(d.Name(), e) })
+	return slices.ContainsFunc(imageExtensions, func(e string) bool { return strings.HasSuffix(strings.ToLower(d.Name()), e) })
 }

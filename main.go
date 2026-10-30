@@ -8,13 +8,8 @@ import (
 )
 
 func main() {
-	setupFlags()
-	setupLogs()
+	startLogs()
 	defer closeLogs()
-
-	if err := initialize(); err != nil {
-		log.Panicf("failed to load images to match against, error:\n%s", err.Error())
-	}
 
 	log.Println("mangopeeler initialized successfully")
 
